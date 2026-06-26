@@ -1,0 +1,32 @@
+# Docker 构建忽略文件
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.vscode
+.idea
+*.swp
+*.swo
+node_modules
+
+# 输出文件（容器内生成）
+output/
+input/
+*.html
+eval_result.json
+bad_samples.json
+test_set.json
+
+# 本地配置（含敏感信息，通过 volume 挂载）
+config/local_config.yaml
+
+# 文档
+LICENSE
+README.md
+
+# Docker 自身
+Dockerfile
+docker-compose.yml
+.dockerignore

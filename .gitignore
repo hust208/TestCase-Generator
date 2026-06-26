@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+eggs/
+
+# Virtual environments
+venv/
+.env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project outputs
+eval_result.json
+bad_samples.json
+test_set.json
+*.html
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Config with secrets
+config/local_config.yaml
+.env
+
+# Docker volumes
+input/
+output/

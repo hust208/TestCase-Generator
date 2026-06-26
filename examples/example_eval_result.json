@@ -1,0 +1,44 @@
+{
+  "summary": {
+    "total_sample": 4,
+    "pass_sample": 3,
+    "fail_sample": 1,
+    "overall_accuracy": 0.75,
+    "hallucination_rate": 0.25,
+    "avg_scores": {
+      "answer_correct": 0.82,
+      "faithfulness": 0.90,
+      "context_recall": 0.78,
+      "context_precision": 0.81
+    }
+  },
+  "detail_records": [
+    {
+      "question": "智云科技成立于哪一年？",
+      "ground_truth": "1992年",
+      "kb_answer": "智云科技成立于1992年。",
+      "correctness": {"avg_score": 1.0, "std_dev": 0.0, "rounds_scores": [1.0, 1.0, 1.0], "comment": "完全正确"},
+      "faithfulness": {"avg_score": 1.0, "std_dev": 0.0, "rounds_scores": [1.0, 1.0, 1.0], "comment": "完全忠实于上下文"},
+      "hallucination": {"avg_score": 0.0, "has_hallucination": false, "hallucination_details": [], "comment": "无幻觉"},
+      "has_hallucination": false,
+      "context_recall": 0.95,
+      "context_precision": 0.90,
+      "overall_score": 0.895,
+      "passed": true
+    },
+    {
+      "question": "智云科技是否提供云计算服务器托管服务？",
+      "ground_truth": "原文中未提及",
+      "kb_answer": "智云科技不提供云计算服务器托管服务，其主要业务是智慧出行领域。",
+      "correctness": {"avg_score": 0.6, "std_dev": 0.1, "rounds_scores": [0.5, 0.7, 0.6], "comment": "后半句不在原文中"},
+      "faithfulness": {"avg_score": 0.5, "std_dev": 0.1, "rounds_scores": [0.5, 0.5, 0.6], "comment": "后半句来自外部知识"},
+      "hallucination": {"avg_score": 0.3, "has_hallucination": true, "hallucination_details": [{"claim": "其主要业务是智慧出行领域", "evidence": "原文仅提及具体产品，未使用'智慧出行领域'概括", "type": "fabrication"}], "comment": "轻微幻觉"},
+      "has_hallucination": true,
+      "hallucination_details": [{"claim": "其主要业务是智慧出行领域", "evidence": "原文仅提及具体产品，未使用此概括", "type": "fabrication"}],
+      "context_recall": 0.40,
+      "context_precision": 0.50,
+      "overall_score": 0.54,
+      "passed": false
+    }
+  ]
+}

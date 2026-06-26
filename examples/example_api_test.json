@@ -1,0 +1,32 @@
+{
+  "total_cases": 3,
+  "passed_cases": 2,
+  "failed_cases": 1,
+  "pass_rate": 0.6667,
+  "results": [
+    {
+      "case_id": "DS-001",
+      "case_name": "创建知识库 - 基本创建",
+      "module": "dataset",
+      "passed": true,
+      "passed_steps": 1,
+      "total_steps": 1
+    },
+    {
+      "case_id": "DS-002",
+      "case_name": "获取知识库列表 - 根目录",
+      "module": "dataset",
+      "passed": true,
+      "passed_steps": 1,
+      "total_steps": 1
+    },
+    {
+      "case_id": "SCH-001",
+      "case_name": "向量搜索测试 - embedding模式",
+      "module": "search",
+      "passed": false,
+      "passed_steps": 3,
+      "total_steps": 4
+    }
+  ]
+}

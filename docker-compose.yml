@@ -1,0 +1,133 @@
+# ============================================================
+# TestCase Generator - Docker Compose 部署配置
+# ============================================================
+# 使用方式：
+#   docker compose up eval        - 运行知识库评测
+#   docker compose up generate    - 仅出题
+#   docker compose up judge       - 仅评审
+#   docker compose up api-test    - 运行API测试
+#   docker compose up report      - 生成HTML报告
+#   docker compose up all-tests   - 评测+API测试
+# ============================================================
+
+version: "3.8"
+
+services:
+  # ---- 基础镜像构建 ----
+  tcg-base:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: testcase-generator:1.0.0
+
+  # ---- 知识库评测 ----
+  eval:
+    image: testcase-generator:1.0.0
+    depends_on: [tcg-base]
+    container_name: tcg-eval
+    volumes:
+      - ./config/local_config.yaml:/app/config/local_config.yaml:ro
+      - ./output:/app/output
+      - ./input:/app/input:ro          # 放置输入文件（chunks.json / test_set.json）
+    environment:
+      - TCG_LLM_API__URL=${LLM_API_URL:-http://host.docker.internal:8000/v1/chat/completions}
+      - TCG_EMBEDDING_API__URL=${EMB_API_URL:-http://host.docker.internal:8001/v1/embeddings}
+      - TCG_KB_API__URL=${KB_API_URL:-http://jszsk.jieshun.cn:3000/openapi/chat}
+      - TCG_EVALUATION__JUDGE_ROUNDS=${JUDGE_ROUNDS:-3}
+      - TCG_EVALUATION__MIN_ANSWER_SCORE=${MIN_SCORE:-0.8}
+    command: ["--mode", "eval", "--input", "/app/input/chunks.json", "--config", "config/config.yaml"]
+
+  # ---- 仅出题 ----
+  generate:
+    image: testcase-generator:1.0.0
+    depends_on: [tcg-base]
+    container_name: tcg-generate
+    volumes:
+      - ./config/local_config.yaml:/app/config/local_config.yaml:ro
+      - ./output:/app/output
+      - ./input:/app/input:ro
+    environment:
+      - TCG_LLM_API__URL=${LLM_API_URL:-http://host.docker.internal:8000/v1/chat/completions}
+      - TCG_EMBEDDING_API__URL=${EMB_API_URL:-http://host.docker.internal:8001/v1/embeddings}
+    command: ["--mode", "generate", "--input", "/app/input/chunks.json", "--output", "/app/output/test_set.json"]
+
+  # ---- 仅评审 ----
+  judge:
+    image: testcase-generator:1.0.0
+    depends_on: [tcg-base]
+    container_name: tcg-judge
+    volumes:
+      - ./config/local_config.yaml:/app/config/local_config.yaml:ro
+      - ./output:/app/output
+      - ./input:/app/input:ro
+    environment:
+      - TCG_LLM_API__URL=${LLM_API_URL:-http://host.docker.internal:8000/v1/chat/completions}
+      - TCG_EMBEDDING_API__URL=${EMB_API_URL:-http://host.docker.internal:8001/v1/embeddings}
+      - TCG_KB_API__URL=${KB_API_URL:-http://jszsk.jieshun.cn:3000/openapi/chat}
+      - TCG_EVALUATION__JUDGE_ROUNDS=${JUDGE_ROUNDS:-3}
+    command: ["--mode", "judge", "--input", "/app/input/test_set.json"]
+
+  # ---- API自动化测试 ----
+  api-test:
+    image: testcase-generator:1.0.0
+    depends_on: [tcg-base]
+    container_name: tcg-api-test
+    volumes:
+      - ./config/local_config.yaml:/app/config/local_config.yaml:ro
+      - ./output:/app/output
+    environment:
+      - TCG_API_TEST__BASE_URL=${FASTGPT_URL:-http://host.docker.internal:3000}
+      - TCG_API_TEST__API_KEY=${FASTGPT_API_KEY:-your-api-key}
+    command: ["--mode", "api-test", "--config", "config/config.yaml"]
+
+  # ---- 生成HTML报告 ----
+  report:
+    image: testcase-generator:1.0.0
+    depends_on: [tcg-base]
+    container_name: tcg-report
+    volumes:
+      - ./output:/app/output
+      - ./input:/app/input:ro
+    command: ["--mode", "report", "--input", "/app/input/eval_result.json", "--output", "/app/output/eval_report.html"]
+
+  # ---- 报告查看服务（轻量 Nginx） ----
+  report-viewer:
+    image: nginx:alpine
+    container_name: tcg-report-viewer
+    ports:
+      - "8080:80"
+    volumes:
+      - ./output:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on: []
+
+  # ---- 全流程测试（评测+API测试+报告） ----
+  all-tests:
+    image: testcase-generator:1.0.0
+    depends_on: [tcg-base]
+    container_name: tcg-all-tests
+    volumes:
+      - ./config/local_config.yaml:/app/config/local_config.yaml:ro
+      - ./output:/app/output
+      - ./input:/app/input:ro
+    environment:
+      - TCG_LLM_API__URL=${LLM_API_URL:-http://host.docker.internal:8000/v1/chat/completions}
+      - TCG_EMBEDDING_API__URL=${EMB_API_URL:-http://host.docker.internal:8001/v1/embeddings}
+      - TCG_KB_API__URL=${KB_API_URL:-http://jszsk.jieshun.cn:3000/openapi/chat}
+      - TCG_API_TEST__BASE_URL=${FASTGPT_URL:-http://host.docker.internal:3000}
+      - TCG_API_TEST__API_KEY=${FASTGPT_API_KEY:-your-api-key}
+      - TCG_EVALUATION__JUDGE_ROUNDS=${JUDGE_ROUNDS:-3}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "==== Step 1: 知识库评测 ===="
+        python main.py --mode eval --input /app/input/chunks.json --config config/config.yaml
+        echo "==== Step 2: API测试 ===="
+        python main.py --mode api-test --config config/config.yaml
+        echo "==== Step 3: 生成HTML报告 ===="
+        python main.py --mode report --input /app/output/eval_result.json
+        echo "==== 全流程完成！查看报告: http://localhost:8080 ===="
+
+# ---- 共享卷定义 ----
+volumes:
+  output-data:

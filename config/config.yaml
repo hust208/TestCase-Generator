@@ -1,0 +1,62 @@
+# ====================== TestCase Generator 配置 ======================
+# 复制此文件为 local_config.yaml 并填入实际地址
+
+# 知识库问答接口
+kb_api:
+  url: "http://jszsk.jieshun.cn:3000/openapi/chat"
+  top_k: 3
+  timeout: 45
+  # 如果需要认证，填入 headers
+  headers:
+    Content-Type: "application/json"
+
+# LLM 接口（出题 + 评审共用）
+llm_api:
+  url: "http://your-private-llm/v1/completions"
+  temperature: 0.1
+  max_tokens: 2048
+  timeout: 60
+  headers:
+    Content-Type: "application/json"
+
+# Embedding 接口（语义去重 + 检索评测）
+embedding_api:
+  url: "http://your-embedding-api/v1/embeddings"
+  timeout: 30
+  headers:
+    Content-Type: "application/json"
+
+# 评测参数
+evaluation:
+  min_answer_score: 0.8       # 合格阈值
+  sim_dup_threshold: 0.9      # 语义去重阈值
+  judge_rounds: 3             # 评审轮数（取均值提升稳定性）
+  hallucination_threshold: 0.3 # 幻觉判定阈值
+
+# 出题参数
+generation:
+  num_questions_per_chunk: 2   # 每个切片生成题目数
+  question_types:              # 题型配比权重
+    fact: 0.4                  # 事实题
+    summary: 0.3               # 归纳题
+    distinction: 0.2           # 辨析题
+    nonexistent: 0.1           # 不存在题
+
+# 过滤参数
+filter:
+  min_question_length: 8
+  max_question_length: 120
+  min_answer_length: 5
+
+# API 测试参数（FastGPT 平台）
+api_test:
+  base_url: "http://your-fastgpt-api"
+  api_key: "your-api-key"
+  timeout: 30
+
+# 输出路径
+output:
+  test_set_path: "test_set.json"
+  result_path: "eval_result.json"
+  bad_sample_path: "bad_samples.json"
+  report_path: "eval_report.html"
